@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "8669659438",
+    "project_id": "mydrive-klaudiusz-soltysik",
+    "storage_bucket": "mydrive-klaudiusz-soltysik.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8669659438:android:665e5c01118dd8e03dfabf",
+        "android_client_info": {
+          "package_name": "com.example.mydrive"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "8669659438-vter4u72rac4ko0p3c6hvf8dsfblpjpf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhw8YF-fESPs6PVvom9dcJH4XlpFJhj6c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "8669659438-vter4u72rac4ko0p3c6hvf8dsfblpjpf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
