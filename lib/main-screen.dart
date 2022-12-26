@@ -14,6 +14,13 @@ class MainScreen extends StatelessWidget {
         create: (_) => GoogleSignInProvider(),
         builder: (context, child) {
           return Scaffold(
+            floatingActionButton: FloatingActionButton(
+              backgroundColor: Colors.blue[700],
+              onPressed: () {},
+              child: Icon(Icons.add),
+            ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.endDocked,
             body: SliderDrawer(
               key: key,
               appBar: SliderAppBar(
@@ -68,23 +75,9 @@ class MainScreen extends StatelessWidget {
                               child: Icon(Icons.delete),
                               onTap: () {},
                             ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Row(
-                          children: <Widget>[
-                            GestureDetector(
-                              child: Text(
-                                'vehicle 2',
-                                style: TextStyle(fontSize: 26),
-                              ),
-                              onTap: () {},
-                            ),
                             SizedBox(width: 30),
                             GestureDetector(
-                              child: Icon(Icons.delete),
+                              child: Icon(Icons.edit),
                               onTap: () {},
                             ),
                           ],
