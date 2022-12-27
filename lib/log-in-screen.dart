@@ -11,6 +11,10 @@ class LogInScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.white, statusBarColor: Colors.white));
+
     return ChangeNotifierProvider<GoogleSignInProvider>(
         create: (_) => GoogleSignInProvider(),
         builder: (context, child) {

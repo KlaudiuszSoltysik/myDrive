@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -9,20 +11,20 @@ class AddVehicleScreen extends StatefulWidget {
 
 class _AddVehicleScreenState extends State<AddVehicleScreen> {
   final TextEditingController nameController = TextEditingController();
-  DateTime oilDate = DateTime.now();
+  DateTime reviewDate = DateTime.now();
   DateTime ocDate = DateTime.now();
 
-  Future<void> _selectOilDate(BuildContext context) async {
+  Future<void> _selectReviewDate(BuildContext context) async {
     DateTime today = DateTime.now();
 
     final DateTime? picked = await showDatePicker(
         context: context,
-        initialDate: oilDate,
+        initialDate: reviewDate,
         firstDate: today,
         lastDate: DateTime(today.year + 1, today.month, today.day));
-    if (picked != null && picked != oilDate) {
+    if (picked != null && picked != reviewDate) {
       setState(() {
-        oilDate = picked;
+        reviewDate = picked;
       });
     }
   }
@@ -42,6 +44,27 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     }
   }
 
+  Future saveVehicle() async {
+    if (nameController.text != null) {
+      final docVehicle = FirebaseFirestore.instance
+          .collection(FirebaseAuth.instance.currentUser!.email.toString())
+          .doc('cars');
+
+      final json = {
+        'name': nameController.text,
+        'review': reviewDate,
+        'oc': ocDate
+      };
+
+      await docVehicle.set(json);
+
+      nameController.clear();
+      reviewDate = DateTime.now();
+      ocDate = DateTime.now();
+      Navigator.pop(context);
+    }
+  }
+
   @override
   void dispose() {
     nameController.dispose();
@@ -50,7 +73,6 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     return Scaffold(
       body: Center(
         child: Column(
@@ -73,13 +95,13 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                   style: ButtonStyle(
                       backgroundColor:
                           MaterialStateProperty.all<Color>(Colors.blue[700]!)),
-                  onPressed: () => _selectOilDate(context),
+                  onPressed: () => _selectReviewDate(context),
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: FractionallySizedBox(
                       child: Center(
                           child: Text(
-                        'Select next oil change date',
+                        'Select car review date',
                         style: TextStyle(fontSize: 20),
                       )),
                       widthFactor: 0.8,
@@ -87,7 +109,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                   ),
                 ),
                 SizedBox(height: 10),
-                Text('${oilDate.toLocal()}'.split(' ')[0]),
+                Text('${reviewDate.toLocal()}'.split(' ')[0]),
               ],
             ),
             Column(
@@ -118,7 +140,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                   backgroundColor:
                       MaterialStateProperty.all<Color>(Colors.blue[700]!)),
               onPressed: () {
-                if (nameController.text != null) {}
+                saveVehicle();
               },
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 20),
