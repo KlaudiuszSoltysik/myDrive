@@ -37,6 +37,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
         initialDate: ocDate,
         firstDate: DateTime.now(),
         lastDate: DateTime(today.year + 1, today.month, today.day));
+
     if (picked != null && picked != ocDate) {
       setState(() {
         ocDate = picked;
@@ -48,7 +49,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     if (nameController.text != null) {
       final docVehicle = FirebaseFirestore.instance
           .collection(FirebaseAuth.instance.currentUser!.email.toString())
-          .doc('cars');
+          .doc(nameController.text);
 
       final json = {
         'name': nameController.text,
@@ -61,7 +62,9 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
       nameController.clear();
       reviewDate = DateTime.now();
       ocDate = DateTime.now();
-      Navigator.pop(context);
+
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/main-screen', (Route<dynamic> route) => false);
     }
   }
 
@@ -74,87 +77,104 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            FractionallySizedBox(
-              child: TextFormField(
-                controller: nameController,
-                style: TextStyle(fontSize: 20),
-                decoration: InputDecoration(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.2), BlendMode.dstATop),
+            image: AssetImage("assets/images/bg.png"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              FractionallySizedBox(
+                child: TextFormField(
+                  controller: nameController,
+                  style: TextStyle(fontSize: 20),
+                  decoration: InputDecoration(
                     border: UnderlineInputBorder(),
                     labelText: 'Name',
-                    labelStyle: TextStyle(fontSize: 20)),
+                    labelStyle: TextStyle(fontSize: 20),
+                  ),
+                ),
+                widthFactor: 0.8,
               ),
-              widthFactor: 0.8,
-            ),
-            Column(
-              children: <Widget>[
-                ElevatedButton(
-                  style: ButtonStyle(
+              Column(
+                children: <Widget>[
+                  ElevatedButton(
+                    style: ButtonStyle(
                       backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.blue[700]!)),
-                  onPressed: () => _selectReviewDate(context),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: FractionallySizedBox(
-                      child: Center(
+                          MaterialStateProperty.all<Color>(Colors.blue[700]!),
+                    ),
+                    onPressed: () => _selectReviewDate(context),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: FractionallySizedBox(
+                        child: Center(
                           child: Text(
-                        'Select car review date',
-                        style: TextStyle(fontSize: 20),
-                      )),
-                      widthFactor: 0.8,
+                            'Select car review date',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                        widthFactor: 0.8,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 10),
-                Text('${reviewDate.toLocal()}'.split(' ')[0]),
-              ],
-            ),
-            Column(
-              children: <Widget>[
-                ElevatedButton(
-                  style: ButtonStyle(
+                  SizedBox(height: 10),
+                  Text('${reviewDate.toLocal()}'.split(' ')[0]),
+                ],
+              ),
+              Column(
+                children: <Widget>[
+                  ElevatedButton(
+                    style: ButtonStyle(
                       backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.blue[700]!)),
-                  onPressed: () => _selectOcDate(context),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: FractionallySizedBox(
-                      child: Center(
+                          MaterialStateProperty.all<Color>(Colors.blue[700]!),
+                    ),
+                    onPressed: () => _selectOcDate(context),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: FractionallySizedBox(
+                        child: Center(
                           child: Text(
-                        'Select OC renew date',
-                        style: TextStyle(fontSize: 20),
-                      )),
-                      widthFactor: 0.8,
+                            'Select OC renew date',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                        widthFactor: 0.8,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 10),
-                Text('${ocDate.toLocal()}'.split(' ')[0]),
-              ],
-            ),
-            ElevatedButton(
-              style: ButtonStyle(
+                  SizedBox(height: 10),
+                  Text('${ocDate.toLocal()}'.split(' ')[0]),
+                ],
+              ),
+              ElevatedButton(
+                style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.blue[700]!)),
-              onPressed: () {
-                saveVehicle();
-              },
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: FractionallySizedBox(
-                  child: Center(
+                      MaterialStateProperty.all<Color>(Colors.blue[700]!),
+                ),
+                onPressed: () {
+                  saveVehicle();
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: FractionallySizedBox(
+                    child: Center(
                       child: Text(
-                    'Save',
-                    style: TextStyle(fontSize: 20),
-                  )),
-                  widthFactor: 0.8,
+                        'Save',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    widthFactor: 0.8,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
