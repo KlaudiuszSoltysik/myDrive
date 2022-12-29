@@ -11,21 +11,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final user = FirebaseAuth.instance.currentUser!;
-  late List<dynamic> cars = [];
   late dynamic car;
-
-  Future getCars() async {
-    await FirebaseFirestore.instance
-        .collection(user.email.toString())
-        .get()
-        .then(
-          (snapshot) => snapshot.docs.forEach(
-            (document) {
-              cars.add(document.reference.id);
-            },
-          ),
-        );
-  }
 
   Future getCar() async {
     List<dynamic> temp = [];
@@ -52,7 +38,8 @@ class _MainScreenState extends State<MainScreen> {
           floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.blue[700],
             onPressed: () {
-              Navigator.pushNamed(context, '/add-event-screen');
+              Navigator.pushNamed(context, '/add-event-screen',
+                  arguments: {'car': car});
             },
             child: Icon(Icons.add),
           ),
@@ -101,42 +88,57 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   SizedBox(height: 40),
                   Expanded(
-                    child: FutureBuilder(
-                        future: getCars(),
-                        builder: (context, snapshot) {
-                          return ListView.builder(
-                            itemCount: cars.length,
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: <Widget>[
-                                    Text(
-                                      cars[index],
-                                      style: TextStyle(fontSize: 26),
-                                    ),
-                                    SizedBox(width: 30),
-                                    Row(
-                                      children: <Widget>[
-                                        GestureDetector(
-                                          child: Icon(Icons.delete),
-                                          onTap: () {},
-                                        ),
-                                        SizedBox(width: 30),
-                                        GestureDetector(
-                                          child: Icon(Icons.edit),
-                                          onTap: () {},
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        }),
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection(user.email.toString())
+                          .snapshots(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<QuerySnapshot> snapshot) {
+                        if (snapshot.hasError) {
+                          return Text('Something went wrong');
+                        }
+
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Text("Loading");
+                        }
+
+                        return ListView(
+                          children: snapshot.data!.docs
+                              .map((DocumentSnapshot document) {
+                            Map<String, dynamic> data =
+                                document.data()! as Map<String, dynamic>;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: <Widget>[
+                                  Text(
+                                    data['name'],
+                                    style: TextStyle(fontSize: 26),
+                                  ),
+                                  SizedBox(width: 30),
+                                  Row(
+                                    children: <Widget>[
+                                      GestureDetector(
+                                        child: Icon(Icons.delete),
+                                        onTap: () {},
+                                      ),
+                                      SizedBox(width: 30),
+                                      GestureDetector(
+                                        child: Icon(Icons.edit),
+                                        onTap: () {},
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(15),
@@ -178,7 +180,31 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-          body: Container(),
+          body: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('${user.email.toString()}-events')
+                .snapshots(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.hasError) {
+                return Text('Something went wrong');
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text("Loading");
+              }
+
+              return ListView(
+                children: snapshot.data!.docs.map((DocumentSnapshot document) {
+                  Map<String, dynamic> data =
+                      document.data()! as Map<String, dynamic>;
+                  return ListTile(
+                    title: Text(data['2022-12-29 02:52:50']['name']),
+                  );
+                }).toList(),
+              );
+            },
+          ),
         );
       },
     );

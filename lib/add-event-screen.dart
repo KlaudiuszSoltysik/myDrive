@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 
 class AddEventScreen extends StatefulWidget {
   @override
@@ -10,7 +11,9 @@ class AddEventScreen extends StatefulWidget {
 }
 
 class _AddEventScreenState extends State<AddEventScreen> {
-  final TextEditingController nameController = TextEditingController();
+  final TextEditingController eventController = TextEditingController();
+  final TextEditingController descController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
   DateTime date = DateTime.now();
 
   Future<void> _selectDate(BuildContext context) async {
@@ -19,8 +22,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: date,
-        firstDate: DateTime.now(),
-        lastDate: DateTime(today.year + 1, today.month, today.day));
+        firstDate: DateTime(today.year - 1, today.month, today.day),
+        lastDate: DateTime(today.year, today.month + 1, today.day));
 
     if (picked != null && picked != date) {
       setState(() {
@@ -29,8 +32,46 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
   }
 
+  Future saveEvent(String car) async {
+    if (eventController.text != null) {
+      final docVehicle = FirebaseFirestore.instance
+          .collection(
+              '${FirebaseAuth.instance.currentUser!.email.toString()}-events')
+          .doc(car);
+
+      final json = {
+        DateFormat('yyyy-MM-dd hh:mm:ss').format(DateTime.now()): {
+          'name': eventController.text,
+          'date': date,
+          'desc': descController.text,
+          'price': priceController.text
+        }
+      };
+
+      await docVehicle.set(json);
+
+      eventController.clear();
+      descController.clear();
+      priceController.clear();
+      date = DateTime.now();
+
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/main-screen', (Route<dynamic> route) => false);
+    }
+  }
+
+  @override
+  void dispose() {
+    eventController.dispose();
+    descController.dispose();
+    priceController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final arguments = (ModalRoute.of(context)?.settings.arguments ??
+        <String, dynamic>{}) as Map;
     return Scaffold(
       body: SizedBox.expand(
         child: Container(
@@ -52,7 +93,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                     SizedBox(height: 40),
                     FractionallySizedBox(
                       child: TextFormField(
-                        controller: nameController,
+                        controller: eventController,
                         style: TextStyle(fontSize: 20),
                         decoration: InputDecoration(
                           border: UnderlineInputBorder(),
@@ -91,7 +132,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                     SizedBox(height: 40),
                     FractionallySizedBox(
                       child: TextFormField(
-                        controller: nameController,
+                        controller: descController,
                         style: TextStyle(fontSize: 20),
                         decoration: InputDecoration(
                           border: UnderlineInputBorder(),
@@ -106,7 +147,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                     SizedBox(height: 40),
                     FractionallySizedBox(
                       child: TextFormField(
-                        controller: nameController,
+                        controller: priceController,
                         style: TextStyle(fontSize: 20),
                         decoration: InputDecoration(
                           border: UnderlineInputBorder(),
@@ -125,7 +166,9 @@ class _AddEventScreenState extends State<AddEventScreen> {
                             backgroundColor: MaterialStateProperty.all<Color>(
                                 Colors.blue[700]!),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            saveEvent(arguments['car']);
+                          },
                           child: Padding(
                             padding: EdgeInsets.symmetric(vertical: 20),
                             child: FractionallySizedBox(
