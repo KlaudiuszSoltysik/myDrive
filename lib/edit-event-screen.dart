@@ -4,16 +4,17 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 
-class AddEventScreen extends StatefulWidget {
+class EditEventScreen extends StatefulWidget {
   @override
-  _AddEventScreenState createState() => _AddEventScreenState();
+  _EditEventScreenState createState() => _EditEventScreenState();
 }
 
-class _AddEventScreenState extends State<AddEventScreen> {
+class _EditEventScreenState extends State<EditEventScreen> {
   final TextEditingController eventController = TextEditingController();
   final TextEditingController descController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   DateTime date = DateTime.now();
+  late String address;
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime today = DateTime.now();
@@ -50,6 +51,12 @@ class _AddEventScreenState extends State<AddEventScreen> {
 
       await docVehicle.set(json);
 
+      FirebaseFirestore.instance
+          .collection(
+              '${FirebaseAuth.instance.currentUser!.email.toString()}-${car}')
+          .doc(address)
+          .delete();
+
       eventController.clear();
       descController.clear();
       priceController.clear();
@@ -73,6 +80,12 @@ class _AddEventScreenState extends State<AddEventScreen> {
     final arguments = (ModalRoute.of(context)?.settings.arguments ??
         <String, dynamic>{}) as Map;
 
+    eventController.text = arguments['name'];
+    descController.text = arguments['desc'];
+    priceController.text = arguments['price'];
+    date = DateTime.parse(arguments['date'].toDate().toString());
+    address = arguments['address'];
+
     return Scaffold(
       body: SizedBox.expand(
         child: Container(
@@ -92,7 +105,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 SizedBox(height: 40),
                 Center(
                   child: Text(
-                    'Add event',
+                    'Edit event',
                     style: TextStyle(fontSize: 40),
                   ),
                 ),

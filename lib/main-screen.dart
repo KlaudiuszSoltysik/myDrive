@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'log-in-provider.dart';
+import 'package:intl/intl.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -11,7 +12,23 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final user = FirebaseAuth.instance.currentUser!;
-  late dynamic car;
+  dynamic car = "";
+
+  AlertDialog alert = AlertDialog(
+    title: Text("AlertDialog"),
+    content:
+        Text("Would you like to continue learning how to use Flutter alerts?"),
+    actions: [
+      TextButton(
+        child: Text("Cancel"),
+        onPressed: () {},
+      ),
+      TextButton(
+        child: Text("Continue"),
+        onPressed: () {},
+      ),
+    ],
+  );
 
   Future getCar() async {
     List<dynamic> temp = [];
@@ -27,6 +44,12 @@ class _MainScreenState extends State<MainScreen> {
           ),
         );
     car = temp[0];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getCar();
   }
 
   @override
@@ -46,12 +69,7 @@ class _MainScreenState extends State<MainScreen> {
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           appBar: AppBar(
             backgroundColor: Colors.blue[700],
-            title: FutureBuilder(
-              future: getCar(),
-              builder: (context, snapshot) {
-                return Text(car);
-              },
-            ),
+            title: Text(car),
           ),
           drawer: Drawer(
             child: Container(
@@ -109,26 +127,44 @@ class _MainScreenState extends State<MainScreen> {
                             Map<String, dynamic> data =
                                 document.data()! as Map<String, dynamic>;
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              padding: const EdgeInsets.all(10),
                               child: Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
+                                    MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
-                                  Text(
-                                    data['name'],
-                                    style: TextStyle(fontSize: 26),
+                                  GestureDetector(
+                                    child: Text(
+                                      data['name'],
+                                      style: TextStyle(fontSize: 26),
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        car = data['name'];
+                                      });
+                                    },
                                   ),
-                                  SizedBox(width: 30),
                                   Row(
                                     children: <Widget>[
                                       GestureDetector(
-                                        child: Icon(Icons.delete),
-                                        onTap: () {},
+                                        child: Icon(Icons.edit),
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return alert;
+                                            },
+                                          );
+                                        },
                                       ),
                                       SizedBox(width: 30),
                                       GestureDetector(
-                                        child: Icon(Icons.edit),
-                                        onTap: () {},
+                                        child: Icon(Icons.delete),
+                                        onTap: () {
+                                          FirebaseFirestore.instance
+                                              .collection(user.email.toString())
+                                              .doc(data['name'])
+                                              .delete();
+                                        },
                                       ),
                                     ],
                                   )
@@ -182,7 +218,8 @@ class _MainScreenState extends State<MainScreen> {
           ),
           body: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
-                .collection('${user.email.toString()}-events')
+                .collection('${user.email.toString()}-$car')
+                .orderBy('date', descending: true)
                 .snapshots(),
             builder:
                 (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -191,15 +228,58 @@ class _MainScreenState extends State<MainScreen> {
               }
 
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Text("Loading");
+                return CircularProgressIndicator();
               }
 
               return ListView(
                 children: snapshot.data!.docs.map((DocumentSnapshot document) {
                   Map<String, dynamic> data =
                       document.data()! as Map<String, dynamic>;
-                  return ListTile(
-                    title: Text(data['2022-12-29 02:52:50']['name']),
+                  return Card(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        ListTile(
+                          leading: data['price'] == ''
+                              ? Text('FREE')
+                              : Text('${data['price']} €'),
+                          title: Text(data['name']),
+                          subtitle: Text(
+                              '${data['desc']}\n${DateFormat('yyyy-MM-dd').format(DateTime.parse(data['date'].toDate().toString()))}'),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: Icon(Icons.edit),
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, '/edit-event-screen',
+                                    arguments: {
+                                      'address': data['address'],
+                                      'name': data['name'],
+                                      'date': data['date'],
+                                      'desc': data['desc'],
+                                      'price': data['price'],
+                                      'car': car
+                                    });
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              child: Icon(Icons.delete),
+                              onPressed: () {
+                                FirebaseFirestore.instance
+                                    .collection('${user.email.toString()}-$car')
+                                    .doc(document['address'])
+                                    .delete();
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ],
+                    ),
                   );
                 }).toList(),
               );

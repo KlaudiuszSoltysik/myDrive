@@ -5,6 +5,7 @@ import 'log-in-screen.dart';
 import 'main-screen.dart';
 import 'add-vehicle-screen.dart';
 import 'add-event-screen.dart';
+import 'edit-event-screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,7 @@ void main() async {
         '/main-screen': (context) => MainScreen(),
         '/add-vehicle-screen': (context) => AddVehicleScreen(),
         '/add-event-screen': (context) => AddEventScreen(),
+        '/edit-event-screen': (context) => EditEventScreen(),
       },
       title: 'myDrive',
       theme: ThemeData(

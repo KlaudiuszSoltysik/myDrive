@@ -86,10 +86,17 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: Expanded(
+          child: ListView(
             children: <Widget>[
+              SizedBox(height: 40),
+              Center(
+                child: Text(
+                  'Edit event',
+                  style: TextStyle(fontSize: 40),
+                ),
+              ),
+              SizedBox(height: 40),
               FractionallySizedBox(
                 child: TextFormField(
                   controller: nameController,
@@ -102,6 +109,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                 ),
                 widthFactor: 0.8,
               ),
+              SizedBox(height: 40),
               Column(
                 children: <Widget>[
                   ElevatedButton(
@@ -127,6 +135,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                   Text('${reviewDate.toLocal()}'.split(' ')[0]),
                 ],
               ),
+              SizedBox(height: 40),
               Column(
                 children: <Widget>[
                   ElevatedButton(
@@ -152,26 +161,31 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                   Text('${ocDate.toLocal()}'.split(' ')[0]),
                 ],
               ),
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.blue[700]!),
-                ),
-                onPressed: () {
-                  saveVehicle();
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: FractionallySizedBox(
-                    child: Center(
-                      child: Text(
-                        'Save',
-                        style: TextStyle(fontSize: 20),
+              SizedBox(height: 40),
+              Column(
+                children: <ElevatedButton>[
+                  ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.blue[700]!),
+                    ),
+                    onPressed: () {
+                      saveVehicle();
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: FractionallySizedBox(
+                        child: Center(
+                          child: Text(
+                            'Save',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                        widthFactor: 0.8,
                       ),
                     ),
-                    widthFactor: 0.8,
                   ),
-                ),
+                ],
               ),
             ],
           ),
