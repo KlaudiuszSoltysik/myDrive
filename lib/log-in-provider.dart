@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GoogleSignInProvider extends ChangeNotifier {
   late String? userEmail = null;
@@ -35,11 +37,19 @@ class GoogleSignInProvider extends ChangeNotifier {
               desc: error.message)
           .show();
     }
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(
+        'email', FirebaseAuth.instance.currentUser!.email.toString());
+
     notifyListeners();
   }
 
   Future signOut(dynamic context) async {
     await FirebaseAuth.instance.signOut();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('email');
 
     Navigator.popAndPushNamed(context, '/');
     notifyListeners();

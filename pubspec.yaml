@@ -22,6 +22,7 @@ dependencies:
   rflutter_alert: ^2.0.4
   flutter_slider_drawer: ^2.1.2
   cloud_firestore: ^4.3.0
+  shared_preferences: ^2.0.15
 
 
 dev_dependencies:

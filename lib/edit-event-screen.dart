@@ -15,9 +15,11 @@ class _EditEventScreenState extends State<EditEventScreen> {
   final TextEditingController priceController = TextEditingController();
   DateTime date = DateTime.now();
   late String address;
+  bool firstTime = false;
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime today = DateTime.now();
+    firstTime = true;
 
     final DateTime? picked = await showDatePicker(
         context: context,
@@ -80,11 +82,13 @@ class _EditEventScreenState extends State<EditEventScreen> {
     final arguments = (ModalRoute.of(context)?.settings.arguments ??
         <String, dynamic>{}) as Map;
 
-    eventController.text = arguments['name'];
-    descController.text = arguments['desc'];
-    priceController.text = arguments['price'];
-    date = DateTime.parse(arguments['date'].toDate().toString());
-    address = arguments['address'];
+    if (firstTime == false) {
+      eventController.text = arguments['name'];
+      descController.text = arguments['desc'];
+      priceController.text = arguments['price'];
+      date = DateTime.parse(arguments['date'].toDate().toString());
+      address = arguments['address'];
+    }
 
     return Scaffold(
       body: SizedBox.expand(

@@ -4,6 +4,36 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'log-in-provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class Alert extends StatelessWidget {
+  final VoidCallback continueFunction;
+  final String message;
+
+  Alert({required this.continueFunction, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: Text(message),
+      actions: [
+        TextButton(
+          child: Text("Cancel"),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        TextButton(
+          child: Text("Delete"),
+          onPressed: () {
+            continueFunction();
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+  }
+}
 
 class MainScreen extends StatefulWidget {
   @override
@@ -14,21 +44,38 @@ class _MainScreenState extends State<MainScreen> {
   final user = FirebaseAuth.instance.currentUser!;
   dynamic car = "";
 
-  AlertDialog alert = AlertDialog(
-    title: Text("AlertDialog"),
-    content:
-        Text("Would you like to continue learning how to use Flutter alerts?"),
-    actions: [
-      TextButton(
-        child: Text("Cancel"),
-        onPressed: () {},
-      ),
-      TextButton(
-        child: Text("Continue"),
-        onPressed: () {},
-      ),
-    ],
-  );
+  void deleteAccount() async {
+    FirebaseAuth.instance.currentUser!.delete();
+
+    var snapshots = await FirebaseFirestore.instance
+        .collection(user.email.toString())
+        .get();
+
+    for (var doc in snapshots.docs) {
+      var snapshots2 = await FirebaseFirestore.instance
+          .collection('${user.email.toString()}-${doc['name']}')
+          .get();
+
+      for (var doc2 in snapshots2.docs) {
+        await doc2.reference.delete();
+      }
+    }
+
+    var snapshots3 = await FirebaseFirestore.instance
+        .collection(user.email.toString())
+        .get();
+
+    for (var doc3 in snapshots3.docs) {
+      await doc3.reference.delete();
+    }
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('email');
+
+    FirebaseAuth.instance.signOut();
+
+    Navigator.popAndPushNamed(context, '/');
+  }
 
   Future getCar() async {
     List<dynamic> temp = [];
@@ -61,8 +108,10 @@ class _MainScreenState extends State<MainScreen> {
           floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.blue[700],
             onPressed: () {
-              Navigator.pushNamed(context, '/add-event-screen',
-                  arguments: {'car': car});
+              if (car != '') {
+                Navigator.pushNamed(context, '/add-event-screen',
+                    arguments: {'car': car});
+              }
             },
             child: Icon(Icons.add),
           ),
@@ -118,7 +167,7 @@ class _MainScreenState extends State<MainScreen> {
 
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return Text("Loading");
+                          return Center(child: CircularProgressIndicator());
                         }
 
                         return ListView(
@@ -141,6 +190,7 @@ class _MainScreenState extends State<MainScreen> {
                                       setState(() {
                                         car = data['name'];
                                       });
+                                      Navigator.pop(context);
                                     },
                                   ),
                                   Row(
@@ -148,22 +198,40 @@ class _MainScreenState extends State<MainScreen> {
                                       GestureDetector(
                                         child: Icon(Icons.edit),
                                         onTap: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return alert;
-                                            },
-                                          );
+                                          Navigator.pushNamed(
+                                              context, '/edit-vehicle-screen',
+                                              arguments: {
+                                                'name': data['name'],
+                                                'oc': data['oc'],
+                                                'review': data['review'],
+                                              });
                                         },
                                       ),
                                       SizedBox(width: 30),
                                       GestureDetector(
                                         child: Icon(Icons.delete),
                                         onTap: () {
-                                          FirebaseFirestore.instance
-                                              .collection(user.email.toString())
-                                              .doc(data['name'])
-                                              .delete();
+                                          Alert alert = Alert(
+                                            continueFunction: FirebaseFirestore
+                                                .instance
+                                                .collection(
+                                                    user.email.toString())
+                                                .doc(data['name'])
+                                                .delete,
+                                            message:
+                                                'Are you sure you want to delete car $car?',
+                                          );
+
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return alert;
+                                            },
+                                          );
+
+                                          setState(() {
+                                            car = "";
+                                          });
                                         },
                                       ),
                                     ],
@@ -195,7 +263,7 @@ class _MainScreenState extends State<MainScreen> {
                         'Sign out',
                         style: TextStyle(fontSize: 26),
                       ),
-                      onTap: () {
+                      onTap: () async {
                         Provider.of<GoogleSignInProvider>(context,
                                 listen: false)
                             .signOut(context);
@@ -209,7 +277,20 @@ class _MainScreenState extends State<MainScreen> {
                         'Delete account',
                         style: TextStyle(fontSize: 26),
                       ),
-                      onTap: () {},
+                      onTap: () {
+                        Alert alert = Alert(
+                          continueFunction: deleteAccount,
+                          message:
+                              'Are you sure you want to delete account with every associated data?',
+                        );
+
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return alert;
+                          },
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -228,7 +309,7 @@ class _MainScreenState extends State<MainScreen> {
               }
 
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
+                return Center(child: CircularProgressIndicator());
               }
 
               return ListView(
@@ -245,7 +326,8 @@ class _MainScreenState extends State<MainScreen> {
                               : Text('${data['price']} €'),
                           title: Text(data['name']),
                           subtitle: Text(
-                              '${data['desc']}\n${DateFormat('yyyy-MM-dd').format(DateTime.parse(data['date'].toDate().toString()))}'),
+                            '${data['desc']}\n${DateFormat('yyyy-MM-dd').format(DateTime.parse(data['date'].toDate().toString()))}',
+                          ),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -269,10 +351,22 @@ class _MainScreenState extends State<MainScreen> {
                             TextButton(
                               child: Icon(Icons.delete),
                               onPressed: () {
-                                FirebaseFirestore.instance
-                                    .collection('${user.email.toString()}-$car')
-                                    .doc(document['address'])
-                                    .delete();
+                                Alert alert = Alert(
+                                  continueFunction: FirebaseFirestore.instance
+                                      .collection(
+                                          '${user.email.toString()}-$car')
+                                      .doc(document['address'])
+                                      .delete,
+                                  message:
+                                      'Are you sure you want to delete event ${data['name']}?',
+                                );
+
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return alert;
+                                  },
+                                );
                               },
                             ),
                             const SizedBox(width: 8),

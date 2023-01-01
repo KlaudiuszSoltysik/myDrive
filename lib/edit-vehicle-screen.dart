@@ -4,18 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
-class AddVehicleScreen extends StatefulWidget {
+class EditVehicleScreen extends StatefulWidget {
   @override
-  _AddVehicleScreenState createState() => _AddVehicleScreenState();
+  _EditVehicleScreenState createState() => _EditVehicleScreenState();
 }
 
-class _AddVehicleScreenState extends State<AddVehicleScreen> {
-  final TextEditingController nameController = TextEditingController();
-  DateTime reviewDate = DateTime.now();
-  DateTime ocDate = DateTime.now();
+class _EditVehicleScreenState extends State<EditVehicleScreen> {
+  late DateTime reviewDate;
+  late DateTime ocDate;
+  late String name;
+  bool firstTime = false;
 
   Future<void> _selectReviewDate(BuildContext context) async {
     DateTime today = DateTime.now();
+    firstTime = true;
 
     final DateTime? picked = await showDatePicker(
         context: context,
@@ -31,6 +33,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
 
   Future<void> _selectOcDate(BuildContext context) async {
     DateTime today = DateTime.now();
+    firstTime = true;
 
     final DateTime? picked = await showDatePicker(
         context: context,
@@ -46,36 +49,33 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
   }
 
   Future saveVehicle() async {
-    if (nameController.text != null) {
-      final docVehicle = FirebaseFirestore.instance
-          .collection(FirebaseAuth.instance.currentUser!.email.toString())
-          .doc(nameController.text);
+    final docVehicle = FirebaseFirestore.instance
+        .collection(FirebaseAuth.instance.currentUser!.email.toString())
+        .doc(name);
 
-      final json = {
-        'name': nameController.text,
-        'review': reviewDate,
-        'oc': ocDate
-      };
+    final json = {'review': reviewDate, 'oc': ocDate};
 
-      await docVehicle.set(json);
+    await docVehicle.update(json);
 
-      nameController.clear();
-      reviewDate = DateTime.now();
-      ocDate = DateTime.now();
+    reviewDate = DateTime.now();
+    ocDate = DateTime.now();
 
-      Navigator.pushNamedAndRemoveUntil(
-          context, '/main-screen', (Route<dynamic> route) => false);
-    }
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    super.dispose();
+    Navigator.pushNamedAndRemoveUntil(
+        context, '/main-screen', (Route<dynamic> route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final arguments = (ModalRoute.of(context)?.settings.arguments ??
+        <String, dynamic>{}) as Map;
+
+    if (firstTime == false) {
+      ocDate = DateTime.parse(arguments['oc'].toDate().toString());
+      reviewDate = DateTime.parse(arguments['review'].toDate().toString());
+    }
+
+    name = arguments['name'];
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -92,22 +92,9 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
               SizedBox(height: 40),
               Center(
                 child: Text(
-                  'Add vehicle',
+                  'Edit vehicle',
                   style: TextStyle(fontSize: 40),
                 ),
-              ),
-              SizedBox(height: 40),
-              FractionallySizedBox(
-                child: TextFormField(
-                  controller: nameController,
-                  style: TextStyle(fontSize: 20),
-                  decoration: InputDecoration(
-                    border: UnderlineInputBorder(),
-                    labelText: 'Name',
-                    labelStyle: TextStyle(fontSize: 20),
-                  ),
-                ),
-                widthFactor: 0.8,
               ),
               SizedBox(height: 40),
               Column(
